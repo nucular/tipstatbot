@@ -4,10 +4,11 @@
   "description": "IRC bot that seeks through online logs and shows stats of Doger tips",
   "main": "./app",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./app.js"
   },
   "dependencies": {
-    "irc": "~0.3.7"
+    "irc": "~0.3.7",
+    "dateformat": "~1.0.8-1.2.3"
   },
   "engines": {
     "node": ">= 0.10.x",
