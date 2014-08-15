@@ -1,5 +1,4 @@
 var irc = require("irc");
-var bot = require("bot");
 
 function cfgBoolean(str) {
     if (str) {
@@ -36,4 +35,3 @@ global.client.addListener("registered", function(message) {
 });
 
 client.connect(process.env.IRC_RETRYCOUNT || 5);
-bot.start();
