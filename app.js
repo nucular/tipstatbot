@@ -28,17 +28,19 @@ function dateDiff(a, b) {
     return timeDiff / (1000 * 3600 * 24);
 }
 
-
-function download(url, dest, cb, errcb) {
-    var file = fs.createWriteStream(dest);
-    var request = http.get(url, function(response) {
-        response.pipe(file);
-        file.on("finish", function() {
-            file.close(cb);
-        });
-        file.on("error", errcb);
-    })
+function separateThousands(n) {
+    var nStr = String(n);
+    nStr += '';
+    x = nStr.split('.');
+    x1 = x[0];
+    x2 = x.length > 1 ? '.' + x[1] : '';
+    var rgx = /(\d+)(\d{3})/;
+    while (rgx.test(x1)) {
+            x1 = x1.replace(rgx, '$1' + ',' + '$2');
+    }
+    return x1 + x2;
 }
+
 
 function loglines(channel, nick, head, tail, linecb, endcb, errcb) {
     var url = "http://mniip.com/irc/log/?"
@@ -138,9 +140,9 @@ function cmd_tipsum(from, to, m) {
 
     tipsum("#dogecoin", nick, head, tail, function(incoming, incoming_num, outgoing, outgoing_num, net) {
         client.say(to, from
-            + ": Incoming (" + String(incoming_num) + "): Ɖ" + String(incoming)
-            + ", outgoing (" + String(outgoing_num) + "): Ɖ" + String(outgoing)
-            + ", net: Ɖ" + String(net));
+            + ": Incoming (" + separateThousands(incoming_num) + "): Ɖ" + separateThousands(incoming)
+            + ", outgoing (" + separateThousands(outgoing_num) + "): Ɖ" + separateThousands(outgoing)
+            + ", net: Ɖ" + separateThousands(net));
     }, function(err) {
         client.say(to, from + ": " + err);
     });
@@ -151,7 +153,7 @@ function cmd_tipstat(from, to, m) {
 }
 
 var commands = {
-    tbshelp: cmd_help,
+    tsbhelp: cmd_help,
     tipsum: cmd_tipsum,
     tipstat: cmd_tipstat
 }
