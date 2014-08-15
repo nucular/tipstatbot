@@ -2,11 +2,12 @@ var irc = require("irc");
 var bot = require("bot");
 
 function cfgBoolean(str) {
-    if (str)
+    if (str) {
         str = str.toLowerCase();
         return str == "true" || str == "yes" || str == "1";
-    else
+    } else {
         return false;
+    }
 }
 
 global.client = new irc.Client(
