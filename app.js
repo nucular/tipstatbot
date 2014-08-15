@@ -136,7 +136,7 @@ function cmd_tipsum(from, to, m) {
         client.say(to, from + ": The log server only allows 14 days difference maximum.");
         return;
     }
-    cost += Math.ceil(diff * 8);
+    cost += Math.ceil(diff * 7);
 
     tipsum("#dogecoin", nick, head, tail, function(incoming, incoming_num, outgoing, outgoing_num, net) {
         client.say(to, from
@@ -153,9 +153,9 @@ function cmd_tipstat(from, to, m) {
 }
 
 var commands = {
-    tsbhelp: cmd_help,
-    tipsum: cmd_tipsum,
-    tipstat: cmd_tipstat
+    tsbhelp: [cmd_help, true],
+    tipsum: [cmd_tipsum, false],
+    tipstat: [cmd_tipstat, false]
 }
 
 
@@ -197,7 +197,7 @@ client.on("message#", function(nick, to, text, message) {
     var m = text.match(cmdparser);
     var cmd = m[0].substring(1);
     if (m && m.length > 0 && commands.hasOwnProperty(cmd)) {
-        if (cost > 0) {
+        if (commands[cmd][1] && cost > 0) {
             client.say(to, nick + ": Please wait " + String(cost) + " seconds.");
             return;
         }
@@ -207,7 +207,7 @@ client.on("message#", function(nick, to, text, message) {
             m[i] = m[i].replace(/^["']+|["']+$/gm, "");
         }
         console.log("Command: " + m.join(","));
-        commands[cmd](nick, to, m);
+        commands[cmd][0](nick, to, m);
     }
 })
 
