@@ -1,7 +1,9 @@
 var irc = require("irc");
 var http = require("http");
 var fs = require("fs");
+
 var dateformat = require("dateformat");
+var minimatch = require("minimatch");
 
 var liner = require("./liner.js");
 
@@ -10,6 +12,14 @@ var cmdparser = /([^"' ]+)|["']([^"']*)["']/g
 
 var cost = true;
 
+
+function getProps(obj) {
+    var keys = [];
+    for(var k in obj)
+        if (obj.hasOwnProperty(k))
+            keys.push(k);
+    return keys;
+}
 
 function dateToUTC(d) {
     // eww
@@ -85,15 +95,15 @@ function tipsum(channel, target, head, tail, cb, errcb) {
     incoming = 0;
     outgoing_num = 0;
     outgoing = 0;
-    target = target.toLowerCase();
+    target = minimatch.Minimatch(target.toLowerCase());
     loglines(channel, "Doger", head, tail, function(from, to, amount) {
         to = to.toLowerCase();
         from = from.toLowerCase();
         amount = Number(amount);
-        if (to == target && from != target) {
+        if (target.match(to) && !target.match(from)) {
             incoming_num++;
             incoming += amount;
-        } else if (from == target && to != target) {
+        } else if (target.match(from) && !target.match(to)) {
             outgoing_num++;
             outgoing += amount;
         }
@@ -105,7 +115,16 @@ function tipsum(channel, target, head, tail, cb, errcb) {
 
 
 function cmd_help(from, to, m) {
-    client.say(to, from + ": !tipsum NICK HEAD [TAIL]");
+    var cmd;
+    if (m.length == 2) {
+        cmd = m[1];
+        if (commands.hasOwnProperty(cmd))
+            client.say(to, from + ": !" + cmd + " " + commands[cmd][2]);
+        else
+            client.say(to, from + ": I don't know that command, sorry!");
+    } else {
+        client.say(to, from + ": My commands are " + getProps(commands).join(", "));
+    }
 }
 
 function cmd_tipsum(from, to, m) {
@@ -153,9 +172,11 @@ function cmd_tipstat(from, to, m) {
 }
 
 var commands = {
-    tsbhelp: [cmd_help, true],
-    tipsum: [cmd_tipsum, false],
-    tipstat: [cmd_tipstat, false]
+    tsbhelp: [cmd_help, true, "[CMD] (May be helpful.)"],
+    tipsum: [cmd_tipsum, false, "NICK HEAD [TAIL] "
+    + "(Head, tail are dates with 14 days maximum difference "
+    + "and tail is right now if not given. Nick may contain wildcards.)"],
+    tipstat: [cmd_tipstat, false, "(not implemented yet)"]
 }
 
 
