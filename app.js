@@ -95,15 +95,18 @@ function tipsum(channel, target, head, tail, cb, errcb) {
     incoming = 0;
     outgoing_num = 0;
     outgoing = 0;
-    target = minimatch.Minimatch(target.toLowerCase());
+    target = target.toLowerCase()
+    var mm = minimatch.Minimatch(target, {
+        noglobstar: true, nocomment: true
+    });
     loglines(channel, "Doger", head, tail, function(from, to, amount) {
         to = to.toLowerCase();
         from = from.toLowerCase();
         amount = Number(amount);
-        if (target.match(to) && !target.match(from)) {
+        if (mm.match(to) && target != from) {
             incoming_num++;
             incoming += amount;
-        } else if (target.match(from) && !target.match(to)) {
+        } else if (mm.match(from) && target != to) {
             outgoing_num++;
             outgoing += amount;
         }
