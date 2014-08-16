@@ -172,11 +172,11 @@ function cmd_tipstat(from, to, m) {
 }
 
 var commands = {
-    tsbhelp: [cmd_help, true, "[CMD] (May be helpful.)"],
-    tipsum: [cmd_tipsum, false, "NICK HEAD [TAIL] "
+    tsbhelp: [cmd_help, false, "[CMD] (May be helpful.)"],
+    tipsum: [cmd_tipsum, true, "NICK HEAD [TAIL] "
     + "(Head, tail are dates with 14 days maximum difference "
     + "and tail is right now if not given. Nick may contain wildcards.)"],
-    tipstat: [cmd_tipstat, false, "(not implemented yet)"]
+    tipstat: [cmd_tipstat, true, "(not implemented yet)"]
 }
 
 
