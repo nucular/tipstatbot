@@ -92,7 +92,7 @@ function loglines(channel, nick, head, tail, linecb, endcb, errcb) {
                                 var from = m[1];
                                 var m = line.match(mtipparser);
                                 for (var i = 0; i < m.length; i++) {
-                                    var s = m.split(" ");
+                                    var s = m[i].split(" ");
                                     linecb(from, s[0], s[1]);
                                 }
                             }
