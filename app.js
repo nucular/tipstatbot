@@ -7,7 +7,11 @@ var minimatch = require("minimatch");
 
 var liner = require("./liner.js");
 
-var lineparser = /Such ([\w\<\-\[\]\\\^\{\}]+) tipped much Ɖ(\d+) to (\w+)\! \(to claim \/msg Doger help\) \[\w+\]/
+var tipparser = /Such ([\w\<\-\[\]\\\^\{\}]+) tipped much Ɖ(\d+) to (\w+)\! \(to claim \/msg Doger help\) \[\w+\]/
+
+var mtipcheck = /([\w\<\-\[\]\\\^\{\}]+): Tipped:/
+var mtipparser = /([\w\<\-\[\]\\\^\{\}]+) (\d+)/g
+
 var cmdparser = /([^"' ]+)|["']([^"']*)["']/g
 
 var cost = true;
@@ -78,9 +82,20 @@ function loglines(channel, nick, head, tail, linecb, endcb, errcb) {
                     } else if (line == "Channel " + channel + " is not publicly logged") {
                         errcb("Channel is not publicly logged"); // lel
                     } else {
-                        var m = line.match(lineparser);
+                        var m = line.match(tipparser);
                         if (m) {
                             linecb(m[1], m[3], m[2]);
+                        }
+                        else {
+                            var m = line.match(mtipcheck);
+                            if (m) {
+                                var from = m[1];
+                                var m = line.match(mtipparser);
+                                for (var i = 0; i < m.length; i++) {
+                                    var s = m.split(" ");
+                                    linecb(from, s[0], s[1]);
+                                }
+                            }
                         }
                     }
                 }
