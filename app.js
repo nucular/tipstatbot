@@ -4,6 +4,7 @@ var fs = require("fs");
 
 var dateformat = require("dateformat");
 var minimatch = require("minimatch");
+var EasyTable = require("easy-table");
 
 var liner = require("./liner.js");
 
@@ -42,7 +43,7 @@ function dateDiff(a, b) {
     return timeDiff / (1000 * 3600 * 24);
 }
 
-function separateThousands(n) {
+function thd(n) {
     var nStr = String(n);
     nStr += '';
     x = nStr.split('.');
@@ -53,6 +54,16 @@ function separateThousands(n) {
             x1 = x1.replace(rgx, '$1' + ',' + '$2');
     }
     return x1 + x2;
+}
+
+function repeatString(pattern, count) {
+    if (count < 1) return '';
+    var result = '';
+    while (count > 1) {
+        if (count & 1) result += pattern;
+        count >>= 1, pattern += pattern;
+    }
+    return result + pattern;
 }
 
 
@@ -91,9 +102,11 @@ function loglines(channel, nick, head, tail, linecb, endcb, errcb) {
                             if (m) {
                                 var from = m[1];
                                 var m = line.match(mtipparser);
-                                for (var i = 0; i < m.length; i++) {
-                                    var s = m[i].split(" ");
-                                    linecb(from, s[0], s[1]);
+                                if (m) {
+                                    for (var i = 0; i < m.length; i++) {
+                                        var s = m[i].split(" ");
+                                        linecb(from, s[0], s[1]);
+                                    }
                                 }
                             }
                         }
@@ -105,31 +118,62 @@ function loglines(channel, nick, head, tail, linecb, endcb, errcb) {
     ).on("error", errcb);
 }
 
-function tipsum(channel, target, head, tail, cb, errcb) {
-    incoming_num = 0;
-    incoming = 0;
-    outgoing_num = 0;
-    outgoing = 0;
-    target = target.toLowerCase()
+function tipstat(channel, target, head, tail, cb, errcb) {
+    if (isNaN(head) || isNaN(tail)) {
+        errcb("Somethings wrong with your date formats!");
+        return;
+    } else if (tail < head) {
+        errcb("The tail date must be later than the head date.");
+        return;
+    } else if (dateDiff(tail, head) > 14) {
+        errcb("The log server only allows 14 days difference.");
+        return;
+    }
+
+    incoming = {amount: 0, tips: 0, avgamount: 0, avgtips: 0};
+    outgoing = {amount: 0, tips: 0, avgamount: 0, avgtips: 0};
+
+    tippers = {};
+    tippees = {};
+
     var mm = minimatch.Minimatch(target, {
         noglobstar: true, nocomment: true
     });
+
     loglines(channel, "Doger", head, tail, function(from, to, amount) {
         to = to.toLowerCase();
         from = from.toLowerCase();
+
         amount = Number(amount);
-        if (mm.match(to) && target != from) {
-            incoming_num++;
-            incoming += amount;
-        } else if (mm.match(from) && target != to) {
-            outgoing_num++;
-            outgoing += amount;
+        if (mm.match(to)) {
+            incoming.tips++;
+            incoming.avgtips = (incoming.avgtips + 1) / 2;
+            incoming.amount += amount;
+            incoming.avgamount = (incoming.avgamount + amount) / 2;
+
+            if (tippers.hasOwnProperty(from)) {
+                tippers[from].tips++;
+                tippers[from].amount += amount;
+            } else {
+                tippers[from] = {tips: 1, amount: amount};
+            }
+        } else if (mm.match(from)) {
+            outgoing.tips++;
+            outgoing.avgtips = (outgoing.avgtips + 1) / 2;
+            outgoing.amount += amount;
+            outgoing.avgamount = (outgoing.avgamount + amount) / 2;
+
+            if (tippees.hasOwnProperty(to)) {
+                tippees[to].tips++;
+                tippees[to].amount += amount;
+            } else {
+                tippees[to] = {tips: 1, amount: amount};
+            }
         }
     }, function() {
-        cb(incoming, incoming_num, outgoing, outgoing_num, incoming - outgoing);
+        cb(incoming, outgoing, tippers, tippees);
     }, errcb);
 }
-
 
 
 function cmd_help(from, to, m) {
@@ -159,42 +203,139 @@ function cmd_tipsum(from, to, m) {
         client.say(to, from + ": Nah, it's !tipsum NICK HEAD [TAIL]");
         return;
     }
-    if (isNaN(head) || isNaN(tail)) {
-        client.say(to, from + ": Something's weird with your date formats.");
-        return;
-    }
-    if (tail < head) {
-        client.say(to, from + ": The tail date must be later than the head.");
-        return;
-    }
 
-    var diff = dateDiff(tail, head);
-    if (diff > 14) {
-        client.say(to, from + ": The log server only allows 14 days difference maximum.");
-        return;
-    }
-    cost += Math.ceil(diff * 7);
-
-    tipsum("#dogecoin", nick, head, tail, function(incoming, incoming_num, outgoing, outgoing_num, net) {
+    tipstat("#dogecoin", nick, head, tail, function(incoming, outgoing, tippers, tippees) {
         client.say(to, from
-            + ": Incoming (" + separateThousands(incoming_num) + "): Ɖ" + separateThousands(incoming)
-            + ", outgoing (" + separateThousands(outgoing_num) + "): Ɖ" + separateThousands(outgoing)
-            + ", net: Ɖ" + separateThousands(net));
+            + ": Incoming (" + thd(incoming.tips) + "): Ɖ" + thd(incoming.amount)
+            + ", outgoing (" + thd(outgoing.tips) + "): Ɖ" + thd(outgoing.amount)
+            + ", net: Ɖ" + thd(incoming.amount - outgoing.amount));
+        cost += Math.ceil((1 + dateDiff(tail, head)) * 7);
     }, function(err) {
         client.say(to, from + ": " + err);
     });
 }
 
 function cmd_tipstat(from, to, m) {
-    client.say(to, from + ": That's not implemented yet :(");
+    var nick, head, tail;
+    if (m.length == 4) {
+        nick = m[1];
+        head = new Date(m[2]);
+        tail = new Date(m[3]);
+    } else if (m.length == 3) {
+        nick = m[1];
+        head = new Date(m[2]);
+        tail = dateToUTC(new Date());
+    } else {
+        client.say(to, from + ": Nah, it's !tipstat NICK HEAD [TAIL]");
+        return;
+    }
+
+    tipstat("#dogecoin", nick, head, tail, function(incoming, outgoing, tippers, tippees) {
+        var output = "Tips to and from: " + nick;
+        output += "\n" + repeatString("=", output.length);
+
+        output += "\nStart (UTC): " + dateformat(head, "yyyy.mm.dd HH:MM:ss");
+        output += "\nEnd (UTC): " + dateformat(tail, "yyyy.mm.dd HH:MM:ss");
+
+        output += "\n\nSummary\n-------"
+        output += "\nIncoming: Ɖ" + thd(incoming.amount) + " (" + thd(incoming.tips) + " tips)";
+        output += "\nOutgoing: Ɖ" + thd(outgoing.amount) + " (" + thd(outgoing.tips) + " tips)";
+        output += "\nNet: Ɖ" + thd(incoming.amount - outgoing.amount);
+
+        var n = function (digits) {
+            return function (val, width) {
+                if (val === undefined) return ''
+                if (typeof val != 'number')
+                    throw new Error(String(val) + ' is not a number')
+                var s = digits == null ? String(val) : val.toFixed(digits).toString()
+                return EasyTable.padLeft(thd(s), width)
+            }
+        }
+
+        var t = new EasyTable();
+        var tkeys = Object.keys(tippers);
+        tkeys.forEach(function(k) {
+            var v = tippers[k];
+            t.cell("Nick", k);
+            t.cell("Amount, Ɖ", v.amount, n(0));
+            t.cell("Tips", v.tips, n(0));
+            t.cell("%", (v.amount / incoming.amount) * 100, n(2));
+            t.newRow();
+        });
+        t.sort(["Amount, Ɖ|des"]);
+
+        t.newRow();
+        t.cell("Nick", "AVG");
+        t.cell("Amount, Ɖ", incoming.avgamount, n(3));
+        t.cell("Tips", incoming.avgtips, n(3));
+        t.cell("%", 50, n(2));
+        t.newRow();
+        t.cell("Nick", "SUM");
+        t.cell("Amount, Ɖ", incoming.amount, n(0));
+        t.cell("Tips", incoming.tips, n(0));
+        t.cell("%", 100, n(2));
+        t.newRow();
+
+        var s = "\nTippers (incoming): " + thd(tkeys.length);
+        output += "\n\n" + s + "\n" + repeatString("-", s.length)
+            + "\n" + t.toString();
+
+
+        var t = new EasyTable();
+        var tkeys = Object.keys(tippees);
+        tkeys.forEach(function(k) {
+            var v = tippees[k];
+            t.cell("Nick", k);
+            t.cell("Amount, Ɖ", v.amount, n(0));
+            t.cell("Tips", v.tips, n(0));
+            t.cell("%", (v.amount / outgoing.amount) * 100, n(2));
+            t.newRow();
+        });
+        t.sort(["Amount, Ɖ|des"]);
+
+        t.newRow();
+        t.cell("Nick", "AVG");
+        t.cell("Amount, Ɖ", outgoing.avgamount, n(3));
+        t.cell("Tips", outgoing.avgtips, n(3));
+        t.cell("%", 50, n(2));
+        t.newRow();
+        t.cell("Nick", "SUM");
+        t.cell("Amount, Ɖ", outgoing.amount, n(0));
+        t.cell("Tips", outgoing.tips, n(0));
+        t.cell("%", 100, n(2));
+        t.newRow();
+
+        var s = "Tippees (outgoing): " + thd(tkeys.length);
+        output += "\n\n" + s + "\n" + repeatString("-", s.length)
+            + "\n" + t.toString();
+
+
+        output += "\n\n[tipstatbot by nucular, "
+            + dateformat(undefined, "yyyy.mm.dd HH:MM:ss") + "]\n";
+
+        fs.writeFile("public/tipstat.txt", output, function(err) {
+            if (err) {
+                client.say(to, from + ": " + err);
+            } else {
+                client.say(to, from + ": Tip statistics created, see "
+                    + process.env.URL);
+            }
+        });
+
+        cost += Math.ceil((2 + dateDiff(tail, head)) * 10);
+    }, function(err) {
+        client.say(to, from + ": " + err);
+    });
 }
+
 
 var commands = {
     tsbhelp: [cmd_help, false, "[CMD] (May be helpful.)"],
     tipsum: [cmd_tipsum, true, "NICK HEAD [TAIL] "
     + "(Head, tail are dates with 14 days maximum difference "
     + "and tail is right now if not given. Nick may contain wildcards.)"],
-    tipstat: [cmd_tipstat, true, "(not implemented yet)"]
+    tipstat: [cmd_tipstat, true, "NICK HEAD [TAIL] (see !tipsum, but provides "
+    + "a link to detailed tip statistics.)"]
 }
 
 
