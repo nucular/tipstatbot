@@ -1,6 +1,7 @@
 var irc = require("irc");
 var http = require("http");
 var querystring = require("querystring");
+var url = require("url");
 var fs = require("fs");
 
 var dateformat = require("dateformat");
