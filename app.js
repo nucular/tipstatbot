@@ -159,7 +159,8 @@ function tipstat(channel, target, head, tail, cb, errcb) {
             } else {
                 tippers[from] = {tips: 1, amount: amount};
             }
-        } else if (mm.match(from)) {
+        }
+        if (mm.match(from)) {
             outgoing.tips++;
             outgoing.avgtips = (outgoing.avgtips + 1) / 2;
             outgoing.amount += amount;
