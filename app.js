@@ -1,5 +1,6 @@
 var irc = require("irc");
 var http = require("http");
+var querystring = require("querystring");
 var fs = require("fs");
 
 var dateformat = require("dateformat");
@@ -313,16 +314,27 @@ function cmd_tipstat(from, to, m) {
         output += "\n\n[tipstatbot by nucular, "
             + dateformat(undefined, "yyyy.mm.dd HH:MM:ss") + "]\n";
 
-        fs.writeFile("public/tipstat.txt", output, function(err) {
-            if (err) {
-                client.say(to, from + ": " + err);
-            } else {
-                client.say(to, from + ": Tip statistics created, see "
-                    + process.env.URL);
-            }
+        var pdata = querystring.stringify({
+            "data": output
         });
+        var req = http.request({
+            host: "http://qp.mniip.com",
+            port: "80",
+            path: "/",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Length": pdata.length
+            }
+        }, function(res) {
+            var url = r.uri.href;
 
-        cost += Math.ceil((2 + dateDiff(tail, head)) * 10);
+            client.say(to, from + ": Tip statistics created, see " + url);
+            cost += Math.ceil((2 + dateDiff(tail, head)) * 10);
+        }); 
+        req.write(pdata);
+        req.end();
+        
     }, function(err) {
         client.say(to, from + ": " + err);
     });
