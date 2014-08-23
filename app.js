@@ -318,7 +318,7 @@ function cmd_tipstat(from, to, m) {
             "data": output
         });
         var req = http.request({
-            host: "http://qp.mniip.com",
+            host: "qp.mniip.com",
             port: "80",
             path: "/",
             method: "POST",
