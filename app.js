@@ -328,13 +328,13 @@ function cmd_tipstat(from, to, m) {
                 "Content-Length": pdata.length
             }
         }, function(res) {
-            var url = res.headers.location;
+            var loc = res.headers.location;
 
-            if (!url.parse(res.headers.location).hostname) {
-                url = "http://qp.mniip.com" + url;
+            if (!url.parse(loc).hostname) {
+                loc = "http://qp.mniip.com" + "/" + loc;
             }
 
-            client.say(to, from + ": Tip statistics created, see " + url);
+            client.say(to, from + ": Tip statistics created, see " + loc);
             cost += Math.ceil((2 + dateDiff(tail, head)) * 10);
         });
         req.on("error", function(err) {
