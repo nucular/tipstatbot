@@ -327,14 +327,22 @@ function cmd_tipstat(from, to, m) {
                 "Content-Length": pdata.length
             }
         }, function(res) {
-            var url = r.uri.href;
+            var url = res.headers.location;
+
+            if (!url.parse(res.headers.location).hostname) {
+                url = "http://qp.mniip.com" + url;
+            }
 
             client.say(to, from + ": Tip statistics created, see " + url);
             cost += Math.ceil((2 + dateDiff(tail, head)) * 10);
-        }); 
+        });
+        req.on("error", function(err) {
+            client.say(to, from + ": " + err);
+        });
+
         req.write(pdata);
         req.end();
-        
+
     }, function(err) {
         client.say(to, from + ": " + err);
     });
