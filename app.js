@@ -206,7 +206,7 @@ function cmd_tipsum(from, to, m) {
         nick = m[1];
         head = dateToUTC(new Date());
         head.setHours(0, 0, 0, 0);
-        head = dateToUTC(new Date());
+        tail = dateToUTC(new Date());
     } else {
         client.say(to, from + ": Nah, it's !tipsum NICK [HEAD] [TAIL]");
         return;
@@ -363,7 +363,7 @@ function cmd_tipstat(from, to, m) {
 
 var commands = {
     tsbhelp: [cmd_help, false, "[CMD] (May be helpful.)"],
-    tipsum: [cmd_tipsum, true, "NICK HEAD [TAIL] "
+    tipsum: [cmd_tipsum, true, "NICK [HEAD] [TAIL] "
     + "(Head, tail are dates with 14 days maximum difference, "
     + "tail defaults to now and head to the start of the day. ",
     + "Nick may contain wildcards.)"],
