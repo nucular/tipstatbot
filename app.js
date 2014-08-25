@@ -259,7 +259,6 @@ function cmd_tipstat(from, to, m) {
         var output = "Tips to and from: " + nick;
         output += "\n" + repeatString("=", output.length);
 
-        output += "\nFound matches: " + matches.join(", ");
         output += "\nStart (UTC): " + dateformat(head, "yyyy.mm.dd HH:MM:ss");
         output += "\nEnd (UTC): " + dateformat(tail, "yyyy.mm.dd HH:MM:ss");
 
@@ -335,6 +334,8 @@ function cmd_tipstat(from, to, m) {
         output += "\n\n" + s + "\n" + repeatString("-", s.length)
             + "\n" + t.toString();
 
+
+        output += "\n\nNicks matching " + nick + ": " + matches.join(", ");
 
         output += "\n\n[tipstatbot by nucular, "
             + dateformat(undefined, "yyyy.mm.dd HH:MM:ss") + "]\n";
