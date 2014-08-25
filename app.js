@@ -202,8 +202,13 @@ function cmd_tipsum(from, to, m) {
         nick = m[1];
         head = new Date(m[2]);
         tail = dateToUTC(new Date());
+    } else if (m.length == 2) {
+        nick = m[1];
+        head = dateToUTC(new Date());
+        head.setHours(0, 0, 0, 0);
+        head = dateToUTC(new Date());
     } else {
-        client.say(to, from + ": Nah, it's !tipsum NICK HEAD [TAIL]");
+        client.say(to, from + ": Nah, it's !tipsum NICK [HEAD] [TAIL]");
         return;
     }
 
@@ -228,8 +233,13 @@ function cmd_tipstat(from, to, m) {
         nick = m[1];
         head = new Date(m[2]);
         tail = dateToUTC(new Date());
+    } else if (m.length == 2) {
+        nick = m[1];
+        head = dateToUTC(new Date());
+        head.setHours(0, 0, 0, 0);
+        head = dateToUTC(new Date());
     } else {
-        client.say(to, from + ": Nah, it's !tipstat NICK HEAD [TAIL]");
+        client.say(to, from + ": Nah, it's !tipstat NICK [HEAD] [TAIL]");
         return;
     }
 
@@ -354,9 +364,10 @@ function cmd_tipstat(from, to, m) {
 var commands = {
     tsbhelp: [cmd_help, false, "[CMD] (May be helpful.)"],
     tipsum: [cmd_tipsum, true, "NICK HEAD [TAIL] "
-    + "(Head, tail are dates with 14 days maximum difference "
-    + "and tail is right now if not given. Nick may contain wildcards.)"],
-    tipstat: [cmd_tipstat, true, "NICK HEAD [TAIL] (see !tipsum, but provides "
+    + "(Head, tail are dates with 14 days maximum difference, "
+    + "tail defaults to now and head to the start of the day. ",
+    + "Nick may contain wildcards.)"],
+    tipstat: [cmd_tipstat, true, "NICK [HEAD] [TAIL] (see !tipsum, but this provides "
     + "a link to detailed tip statistics.)"]
 }
 
