@@ -16,11 +16,12 @@ var Arg = function(name, type, optional) {
     this.optional = optional;
 }
 
-var Command = function(func, help, costblock, args) {
+var Command = function(func, args, help, costblock, restricted) {
     this.func = func || function() {};
+    this.args = args || [];
     this.help = help || "";
     this.costblock = costblock || false;
-    this.args = args || [];
+    this.restricted = restricted || false;
 }
 
 

@@ -7,6 +7,7 @@ var cmdparser = /([^"' ]+)|["']([^"']*)["']/g;
 
 global.BOT_PREFIX = process.env.BOT_PREFIX || "!";
 global.BOT_DEBUG = util.parseBool(process.env.BOT_DEBUG, false);
+global.BOT_OWNER = process.env.BOT_OWNER || "";
 
 global.IRC_NICK = process.env.IRC_NICK || "tipstatbot";
 global.IRC_SERVER = process.env.IRC_SERVER || "irc.freenode.net";
@@ -100,10 +101,31 @@ client.on("message#", function(from, to, text, message) {
         }
 
         debug("Parsed", m);
-        ret = cmd.func(from, to, args);
 
-        if (ret) {
-            costs += ret;
+        if (cmd.restricted) {
+            // restricted command
+            if (from != BOT_OWNER) {
+                debug("Restricted command denied");
+                client.say(to, from + ": Sorry, that command is reserved for " + BOT_OWNER + ".");
+            } else {
+                var cb = function(nnick, nto, ntext, nmessage) {
+                    if (nnick == "NickServ") {
+                        client.removeListener("notice", cb);
+                        if (ntext == BOT_OWNER + " ACC 3") {
+                            debug("Restricted command allowed");
+                            cmd.func(from, to, args);
+                        } else {
+                            debug("Impersonation!");
+                            client.say(to, from + ": Stop impersonating my owner!");
+                        }
+                    }
+                }
+                client.on("notice", cb);
+                client.say("NickServ", "ACC " + process.env.OWNER);
+            }
+        } else {
+            // unrestricted command
+            cmd.func(from, to, args);
         }
     }
 })
