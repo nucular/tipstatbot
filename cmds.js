@@ -62,7 +62,8 @@ cmds.about.help = "Shows some infos about me.";
 
 cmds.about.func = function(from, to, args) {
     client.say(to, from + ": I'm a bot written by nucular in Node.js. "
-        + "I can provide interesting tip statistics, powered by mniip's log server.");
+        + "I can provide interesting tip statistics, powered by mniip's log server. "
+        + "My source can be found at https://github.com/nucular/tipstatbot.");
 }
 
 
