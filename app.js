@@ -132,6 +132,7 @@ function tipstat(channel, target, head, tail, cb, errcb) {
         return;
     }
 
+    matches = [];
     incoming = {amount: 0, tips: 0, avgamount: 0, avgtips: 0};
     outgoing = {amount: 0, tips: 0, avgamount: 0, avgtips: 0};
 
@@ -139,15 +140,23 @@ function tipstat(channel, target, head, tail, cb, errcb) {
     tippees = {};
 
     var mm = minimatch.Minimatch(target, {
-        noglobstar: true, nocomment: true
+        noglobstar: true, nocomment: true, nocase: true
     });
+    mm.makeRe();
+    console.log("Regex: " + mm.regexp.toString());
+
+    target = target.toLowerCase();
 
     loglines(channel, "Doger", head, tail, function(from, to, amount) {
         to = to.toLowerCase();
         from = from.toLowerCase();
 
         amount = Number(amount);
+
         if (mm.match(to)) {
+            if (matches.indexOf(to) == -1)
+                matches.push(to)
+
             incoming.tips++;
             incoming.avgtips = (incoming.avgtips + 1) / 2;
             incoming.amount += amount;
@@ -161,6 +170,9 @@ function tipstat(channel, target, head, tail, cb, errcb) {
             }
         }
         if (mm.match(from)) {
+            if (matches.indexOf(from) == -1)
+                matches.push(from)
+
             outgoing.tips++;
             outgoing.avgtips = (outgoing.avgtips + 1) / 2;
             outgoing.amount += amount;
@@ -174,7 +186,7 @@ function tipstat(channel, target, head, tail, cb, errcb) {
             }
         }
     }, function() {
-        cb(incoming, outgoing, tippers, tippees);
+        cb(incoming, outgoing, tippers, tippees, matches);
     }, errcb);
 }
 
@@ -212,7 +224,7 @@ function cmd_tipsum(from, to, m) {
         return;
     }
 
-    tipstat("#dogecoin", nick, head, tail, function(incoming, outgoing, tippers, tippees) {
+    tipstat("#dogecoin", nick, head, tail, function(incoming, outgoing, tippers, tippees, matches) {
         client.say(to, from
             + ": Incoming (" + thd(incoming.tips) + "): Ɖ" + thd(incoming.amount)
             + ", outgoing (" + thd(outgoing.tips) + "): Ɖ" + thd(outgoing.amount)
@@ -243,10 +255,11 @@ function cmd_tipstat(from, to, m) {
         return;
     }
 
-    tipstat("#dogecoin", nick, head, tail, function(incoming, outgoing, tippers, tippees) {
+    tipstat("#dogecoin", nick, head, tail, function(incoming, outgoing, tippers, tippees, matches) {
         var output = "Tips to and from: " + nick;
         output += "\n" + repeatString("=", output.length);
 
+        output += "\nFound matches: " + matches.join(", ");
         output += "\nStart (UTC): " + dateformat(head, "yyyy.mm.dd HH:MM:ss");
         output += "\nEnd (UTC): " + dateformat(tail, "yyyy.mm.dd HH:MM:ss");
 
@@ -365,7 +378,7 @@ var commands = {
     tsbhelp: [cmd_help, false, "[CMD] (May be helpful.)"],
     tipsum: [cmd_tipsum, true, "NICK [HEAD] [TAIL] "
     + "(Head, tail are dates with 14 days maximum difference, "
-    + "tail defaults to now and head to the start of the day. ",
+    + "tail defaults to now and head to the start of the day. "
     + "Nick may contain wildcards.)"],
     tipstat: [cmd_tipstat, true, "NICK [HEAD] [TAIL] (see !tipsum, but this provides "
     + "a link to detailed tip statistics.)"]
