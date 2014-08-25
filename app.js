@@ -2,15 +2,15 @@ var irc = require("irc");
 var util = require("./util");
 var cmds = require("./cmds");
 
-var cmdparser = /([^"' ]+)|["']([^"']*)["']/g
+var cmdparser = /([^"' ]+)|["']([^"']*)["']/g;
 
 
-global.BOT_PREFIX = process.env.BOT_PREFIX || "!"
-global.BOT_DEBUG = util.parseBool(process.env.BOT_DEBUG, false)
+global.BOT_PREFIX = process.env.BOT_PREFIX || "!";
+global.BOT_DEBUG = util.parseBool(process.env.BOT_DEBUG, false);
 
-global.IRC_NICK = process.env.IRC_NICK || "tipstatbot"
-global.IRC_SERVER = process.env.IRC_SERVER || "irc.freenode.net"
-global.IRC_CHANNELS = (process.env.IRC_CHANNELS || "").split(",")
+global.IRC_NICK = process.env.IRC_NICK || "tipstatbot";
+global.IRC_SERVER = process.env.IRC_SERVER || "irc.freenode.net";
+global.IRC_CHANNELS = (process.env.IRC_CHANNELS || "").split(",");
 
 global.costs = 0;
 
