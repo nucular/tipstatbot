@@ -237,7 +237,7 @@ function cmd_tipstat(from, to, m) {
         nick = m[1];
         head = dateToUTC(new Date());
         head.setHours(0, 0, 0, 0);
-        head = dateToUTC(new Date());
+        tail = dateToUTC(new Date());
     } else {
         client.say(to, from + ": Nah, it's !tipstat NICK [HEAD] [TAIL]");
         return;
