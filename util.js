@@ -57,4 +57,22 @@ util.repeatString = function(pattern, count) {
     return result + pattern;
 }
 
+util.wrapLines = function(text, len) {
+    var lines = [];
+    var line = "";
+    for (var i = 0; i < text.length; i++) {
+        var c = text[i];
+        if (c != " ") {
+            line += c;
+        } else if (line.length >= len) {
+            lines.push(line);
+            line = "";
+        } else {
+            line += " ";
+        }
+    }
+    lines.push(line);
+    return lines.join("\n");
+}
+
 module.exports = util;

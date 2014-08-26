@@ -197,7 +197,8 @@ cmds.tipstat.func = function(from, to, args) {
             + "\n" + t.toString();
 
 
-        output += "\n\nNicks matching " + args.nick + ": " + matches.join(", ");
+        output += "\n\n" + util.wrapLines("Nicks matching " + args.nick + ": "
+            + matches.join(", "), 90);
 
         output += "\n\n[tipstatbot by nucular, "
             + dateformat(undefined, "yyyy.mm.dd HH:MM:ss") + "]\n";
