@@ -62,7 +62,7 @@ client.on("message#", function(from, to, text, message) {
 
         // command is cost-blocked
         if (cmd.costblock && costs > 0) {
-            client.say(to, from + ": Please wait " + String(cost) + " seconds.");
+            client.say(to, from + ": Please wait " + String(costs) + " seconds.");
             return;
         }
 
