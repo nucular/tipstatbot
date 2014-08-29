@@ -92,8 +92,8 @@ function tipstat(channel, target, head, tail) {
     }
 
     matches = [];
-    incoming = {amount: 0, tips: 0, avgamount: 0, avgtips: 0};
-    outgoing = {amount: 0, tips: 0, avgamount: 0, avgtips: 0};
+    incoming = {sum: 0, tips: 0, avg: 0};
+    outgoing = {sum: 0, tips: 0, avg: 0};
 
     tippers = {};
     tippees = {};
@@ -121,15 +121,15 @@ function tipstat(channel, target, head, tail) {
                 matches.push(to)
 
             incoming.tips++;
-            incoming.avgtips = (incoming.avgtips + 1) / 2;
-            incoming.amount += amount;
-            incoming.avgamount = (incoming.avgamount + amount) / 2;
+            incoming.sum += amount;
+            incoming.avg = (incoming.avg + amount) / 2;
 
             if (tippers.hasOwnProperty(from)) {
                 tippers[from].tips++;
-                tippers[from].amount += amount;
+                tippers[from].sum += amount;
+                tippers[from].avg = (tippers[from].avg + amount) / 2;
             } else {
-                tippers[from] = {tips: 1, amount: amount};
+                tippers[from] = {tips: 1, sum: amount, avg: 0};
             }
         }
         if (mm.match(from)) {
@@ -137,15 +137,15 @@ function tipstat(channel, target, head, tail) {
                 matches.push(from)
 
             outgoing.tips++;
-            outgoing.avgtips = (outgoing.avgtips + 1) / 2;
-            outgoing.amount += amount;
-            outgoing.avgamount = (outgoing.avgamount + amount) / 2;
+            outgoing.sum += amount;
+            outgoing.avg = (outgoing.avg + amount) / 2;
 
             if (tippees.hasOwnProperty(to)) {
                 tippees[to].tips++;
-                tippees[to].amount += amount;
+                tippees[to].sum += amount;
+                tippees[to].avg = (tippees[to].avg + amount) / 2;
             } else {
-                tippees[to] = {tips: 1, amount: amount};
+                tippees[to] = {tips: 1, sum: amount, avg: 0};
             }
         }
     });

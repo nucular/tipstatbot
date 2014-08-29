@@ -86,9 +86,9 @@ cmds.tipsum.func = function(from, to, args) {
     t = tipstat("#dogecoin", args.nick, args.head, args.tail)
     t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
         client.say(to, from
-            + ": Incoming (" + util.thd(incoming.tips) + "): Ɖ" + util.thd(incoming.amount)
-            + ", outgoing (" + util.thd(outgoing.tips) + "): Ɖ" + util.thd(outgoing.amount)
-            + ", net: Ɖ" + util.thd(incoming.amount - outgoing.amount));
+            + ": Incoming (" + util.thd(incoming.tips) + "): Ɖ" + util.thd(incoming.sum)
+            + ", outgoing (" + util.thd(outgoing.tips) + "): Ɖ" + util.thd(outgoing.sum)
+            + ", net: Ɖ" + util.thd(incoming.sum - outgoing.sum));
         costs += Math.ceil((1 + util.dateDiff(args.tail, args.head)) * 7);
     });
 
@@ -124,10 +124,13 @@ cmds.tipstat.func = function(from, to, args) {
         output += "\nStart (UTC): " + dateformat(args.head, "yyyy.mm.dd HH:MM:ss");
         output += "\nEnd (UTC): " + dateformat(args.tail, "yyyy.mm.dd HH:MM:ss");
 
-        output += "\n\nSummary\n-------"
-        output += "\nIncoming: Ɖ" + util.thd(incoming.amount) + " (" + util.thd(incoming.tips) + " tips)";
-        output += "\nOutgoing: Ɖ" + util.thd(outgoing.amount) + " (" + util.thd(outgoing.tips) + " tips)";
-        output += "\nNet: Ɖ" + util.thd(incoming.amount - outgoing.amount);
+        output += "\n\n\nSummary\n-------"
+        output += "\nIncoming: Ɖ" + util.thd(incoming.sum) + " (" + util.thd(incoming.tips) + " tips)";
+        output += "\nOutgoing: Ɖ" + util.thd(outgoing.sum) + " (" + util.thd(outgoing.tips) + " tips)";
+        output += "\nNet: Ɖ" + util.thd(incoming.sum - outgoing.sum);
+
+        output += "\n\nTip average, incoming: Ɖ" + util.thd(incoming.avg);
+        output += "\nTip average, outgoing: Ɖ" + util.thd(outgoing.avg);
 
         var n = function (digits) {
             return function (val, width) {
@@ -144,23 +147,28 @@ cmds.tipstat.func = function(from, to, args) {
         tkeys.forEach(function(k) {
             var v = tippers[k];
             t.cell("Nick", k);
-            t.cell("Amount, Ɖ", v.amount, n(0));
+            t.cell("Sum, Ɖ", v.sum, n(0));
             t.cell("Tips", v.tips, n(0));
-            t.cell("%", (v.amount / incoming.amount) * 100, n(2));
+            t.cell("Avg, Ɖ", v.avg, n(2));
+            t.cell("%", (v.sum / incoming.sum) * 100, n(2));
             t.newRow();
         });
-        t.sort(["Amount, Ɖ|des"]);
+        t.sort(["Sum, Ɖ|des"]);
+
+        var avgsum = 0, avgtips = 0;
+        Object.keys(tippers).forEach(function(k) {
+            avgsum = (avgsum + tippers[k].sum) / 2;
+            avgtips = (avgtips + tippers[k].tips) / 2;
+        });
 
         t.newRow();
         t.cell("Nick", "AVG");
-        t.cell("Amount, Ɖ", incoming.avgamount, n(3));
-        t.cell("Tips", incoming.avgtips, n(3));
-        t.cell("%", 50, n(2));
+        t.cell("Sum, Ɖ", avgsum, n(3));
+        t.cell("Tips", avgtips, n(3));
         t.newRow();
         t.cell("Nick", "SUM");
-        t.cell("Amount, Ɖ", incoming.amount, n(0));
+        t.cell("Sum, Ɖ", incoming.sum, n(0));
         t.cell("Tips", incoming.tips, n(0));
-        t.cell("%", 100, n(2));
         t.newRow();
 
         var s = "\nTippers (incoming): " + util.thd(tkeys.length);
@@ -173,23 +181,28 @@ cmds.tipstat.func = function(from, to, args) {
         tkeys.forEach(function(k) {
             var v = tippees[k];
             t.cell("Nick", k);
-            t.cell("Amount, Ɖ", v.amount, n(0));
+            t.cell("Sum, Ɖ", v.sum, n(0));
             t.cell("Tips", v.tips, n(0));
-            t.cell("%", (v.amount / outgoing.amount) * 100, n(2));
+            t.cell("Avg, Ɖ", v.avg, n(2));
+            t.cell("%", (v.sum / outgoing.sum) * 100, n(2));
             t.newRow();
         });
-        t.sort(["Amount, Ɖ|des"]);
+        t.sort(["Sum, Ɖ|des"]);
+
+        var avgsum = 0, avgtips = 0;
+        Object.keys(tippees).forEach(function(k) {
+            avgsum = (avgsum + tippees[k].sum) / 2;
+            avgtips = (avgtips + tippees[k].tips) / 2;
+        });
 
         t.newRow();
         t.cell("Nick", "AVG");
-        t.cell("Amount, Ɖ", outgoing.avgamount, n(3));
-        t.cell("Tips", outgoing.avgtips, n(3));
-        t.cell("%", 50, n(2));
+        t.cell("Sum, Ɖ", avgsum, n(3));
+        t.cell("Tips", avgtips, n(3));
         t.newRow();
         t.cell("Nick", "SUM");
-        t.cell("Amount, Ɖ", outgoing.amount, n(0));
+        t.cell("Sum, Ɖ", outgoing.sum, n(0));
         t.cell("Tips", outgoing.tips, n(0));
-        t.cell("%", 100, n(2));
         t.newRow();
 
         var s = "Tippees (outgoing): " + util.thd(tkeys.length);
