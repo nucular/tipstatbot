@@ -297,7 +297,7 @@ cmds.tipsper.func = function(from, to, args) {
     var head = new Date();
     head.setTime(tail.getTime()-(args.range*units[args.unit]));
 
-    if (isNaN(head)) {
+    if (isNaN(head) || isNaN(tail)) {
         client.say(to, from + ": I really can't measure in that range...");
         return;
     }
