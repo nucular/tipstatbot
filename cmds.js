@@ -295,6 +295,11 @@ cmds.tipsper.func = function(from, to, args) {
     var head = new Date();
     head.setTime(tail.getTime()-(args.range*units[args.unit]));
 
+    if (isNaN(head)) {
+        client.say(to, from + ": I really can't measure in that range...");
+        return;
+    }
+
     var t = tipstat("#dogecoin", "*", head, tail);
     t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
         client.say(to, from
