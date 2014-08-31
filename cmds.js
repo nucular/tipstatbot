@@ -286,6 +286,10 @@ cmds.tipsper.func = function(from, to, args) {
         client.say(to, from + ": I don't even know that unit.");
         return;
     }
+    if (args.range <= 0) {
+        client.say(to, from + ": I can't measure in that range...");
+        return;
+    }
 
     var tail = util.dateToUTC(new Date());
     var head = new Date();
