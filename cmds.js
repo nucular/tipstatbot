@@ -311,7 +311,7 @@ cmds.tipsper.func = function(from, to, args) {
             + ": " + util.thd(incoming.sum / args.range)
             + " (measured in the last " + util.thd(args.range) + " " + args.unit
             + "s)");
-        costs += Math.ceil((1 + util.dateDiff(args.tail, args.head)) * 7);
+        costs += Math.ceil((1 + util.dateDiff(tail, head)) * 7);
     });
 
     t.on("error", function(err) {
