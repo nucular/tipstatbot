@@ -292,6 +292,7 @@ cmds.tipsper.func = function(from, to, args) {
         client.say(to, from + ": I can't measure in that range...");
         return;
     }
+    args.range = args.range.toFixed(4);
 
     var tail = util.dateToUTC(new Date());
     var head = new Date();
@@ -306,9 +307,9 @@ cmds.tipsper.func = function(from, to, args) {
     t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
         client.say(to, from
             + ": tp" + args.unit.substring(0,1)
-            + ": " + util.thd(incoming.tips / args.range)
+            + ": " + util.thd((incoming.tips / args.range).toFixed(4))
             + ", Ɖp" + args.unit.substring(0,1)
-            + ": " + util.thd(incoming.sum / args.range)
+            + ": " + util.thd((incoming.sum / args.range).toFixed(4))
             + " (measured in the last " + util.thd(args.range) + " " + args.unit
             + "s)");
         costs += Math.ceil((1 + util.dateDiff(tail, head)) * 7);
