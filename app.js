@@ -1,5 +1,4 @@
 var irc = require("irc");
-var gith = require("gith");
 var util = require("./util");
 var cmds = require("./cmds");
 
@@ -142,10 +141,10 @@ setInterval(function() {
 
 // add a webhook
 if (process.env.BOT_HOOKREPO) {
-    gith.create(process.env.BOT_GITHPORT || 9000)
+    var gith = require("gith").create(process.env.BOT_GITHPORT || 9001);
     gith({
         repo: process.env.BOT_REPO
-    }).on("push", function(payload) {
+    }).on("file:all", function(payload) {
         for (var i = 0; i < global.IRC_CHANNELS; i++) {
             var c = [];
             var l = 0;
