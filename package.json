@@ -10,7 +10,8 @@
     "irc": "~0.3.7",
     "dateformat": "~1.0.8-1.2.3",
     "minimatch": "~1.0.0",
-    "easy-table": "~0.3.0"
+    "easy-table": "~0.3.0",
+    "gith": "~1.0.4"
   },
   "engines": {
     "node": ">= 0.10.x",

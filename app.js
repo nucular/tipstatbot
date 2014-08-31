@@ -1,4 +1,5 @@
 var irc = require("irc");
+var gith = require("gith");
 var util = require("./util");
 var cmds = require("./cmds");
 
@@ -138,3 +139,30 @@ setInterval(function() {
         costs--;
     }
 }, 1000);
+
+// add a webhook
+if (process.env.BOT_HOOKREPO) {
+    gith.create(process.env.BOT_GITHPORT || 9000)
+    gith({
+        repo: process.env.BOT_REPO
+    }).on("push", function(payload) {
+        for (var i = 0; i < global.IRC_CHANNELS; i++) {
+            var c = [];
+            var l = 0;
+
+            for (var j = 0; j < payload.commits.length; j++) {
+                var t = "\"" + payload.commits[j].message + "\"";
+                if (t.length + l > 100) {
+                    c.push("...");
+                    break;
+                }
+                l += t.length;
+                c.push(t);
+            }
+
+            client.say(global.IRC_CHANNELS[i],
+                payload.pusher.name + " pushed " + payload.commits.length
+                + " commit(s) to my repo: " + c.join(", "));
+        }
+    });
+}
