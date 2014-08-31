@@ -137,7 +137,7 @@ cmds.tipstat.func = function(from, to, args) {
                 if (val === undefined) return ''
                 if (typeof val != 'number')
                     throw new Error(String(val) + ' is not a number')
-                var s = digits == null ? String(val) : val.toFixed(digits).toString()
+                var s = digits == null ? String(val) : (+val).toFixed(digits)
                 return EasyTable.padLeft(util.thd(s), width)
             }
         }
@@ -307,9 +307,9 @@ cmds.tipsper.func = function(from, to, args) {
     t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
         client.say(to, from
             + ": tp" + args.unit.substring(0,1)
-            + ": " + util.thd((incoming.tips / args.range).toFixed(4))
+            + ": " + util.thd(+(incoming.tips / args.range).toFixed(4))
             + ", Ɖp" + args.unit.substring(0,1)
-            + ": " + util.thd((incoming.sum / args.range).toFixed(4))
+            + ": " + util.thd(+(incoming.sum / args.range).toFixed(4))
             + " (measured in the last " + util.thd(args.range) + " " + args.unit
             + "s)");
         costs += Math.ceil((1 + util.dateDiff(tail, head)) * 7);
