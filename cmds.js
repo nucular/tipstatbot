@@ -137,7 +137,7 @@ cmds.tipstat.func = function(from, to, args) {
                 if (val === undefined) return ''
                 if (typeof val != 'number')
                     throw new Error(String(val) + ' is not a number')
-                var s = digits == null ? String(val) : (+val).toFixed(digits)
+                var s = digits == null ? String(val) : (+val).toFixed(digits).toString()
                 return EasyTable.padLeft(util.thd(s), width)
             }
         }
@@ -292,7 +292,7 @@ cmds.tipsper.func = function(from, to, args) {
         client.say(to, from + ": I can't measure in that range...");
         return;
     }
-    args.range = args.range.toFixed(4);
+    args.range = +(args.range).toFixed(4);
 
     var tail = util.dateToUTC(new Date());
     var head = new Date();
