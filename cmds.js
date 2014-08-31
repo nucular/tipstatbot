@@ -267,4 +267,44 @@ cmds.tipstat.func = function(from, to, args) {
 }
 
 
+cmds.tipsper = new Command();
+cmds.tipsper.args = [new Arg("unit", "string", false), new Arg("range", "number", true)];
+cmds.tipsper.help = "Shows you the current tip amount and speed. "
+    + " Unit can be second/minute/hour and range is the measure range, default 1.";
+
+cmds.tipsper.func = function(from, to, args) {
+    var units = {
+        "hour": 3600000,
+        "minute": 60000,
+        "second": 1000
+    }
+
+    if (!args.range) {
+        args.range = 1;
+    }
+    if (!units.hasOwnProperty(args.unit)) {
+        client.say(to, from + ": I don't even know that unit.");
+        return;
+    }
+
+    var tail = util.dateToUTC(new Date());
+    var head = new Date();
+    head.setTime(tail.getTime()-(args.range*units[args.unit]));
+
+    var t = tipstat("#dogecoin", "*", head, tail);
+    t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
+        client.say(to, from
+            + ": TP" + args.unit.substring(0,1).toUpperCase()
+            + ": " + String(incoming.tips / args.range)
+            + ", ƉP" + args.unit.substring(0,1).toUpperCase()
+            + ": " + String(incoming.sum / args.range)
+            + " (measured in the last " + String(args.range) + " " + args.unit
+            + "s)");
+    });
+
+    t.on("error", function(err) {
+        client.say(to, from + ": " + err);
+    });
+}
+
 module.exports = cmds;
