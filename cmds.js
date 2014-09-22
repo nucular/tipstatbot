@@ -76,13 +76,15 @@ cmds.tsbeval.restricted = true;
 cmds.tsbeval.func = function(from, to, args) {
     try {
         var ret = eval(args.js);
-        if (ret && ret.toString)
-            client.say(to, from + ": " + ret.toString());
-        else
-            client.say(to, from + ": null/undefined was returned.");
+        ret = ret ? ret.toString() : String(ret);
+        ret = ret.replace(/(\r\n|\r|\n)([\s\t]*)/gm," ");
+        if (ret.length > 200)
+            ret = ret.substring(0, 200) + "...";
+
+        client.say(to, from + ": " + ret);
     }
     catch (e) {
-        client.say(to, from + "Catched exception: " + e.toString());
+        client.say(to, from + ": " + e.toString());
     }
 }
 

@@ -2,7 +2,7 @@ var irc = require("irc");
 var util = require("./util");
 var cmds = require("./cmds");
 
-var cmdparser = /([^"' ]+)|["']([^"']*)["']/g;
+var cmdparser = /([^" ]+)|"([^"]*)"/g;
 
 
 global.BOT_PREFIX = process.env.BOT_PREFIX || "!";
