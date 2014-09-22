@@ -74,11 +74,16 @@ cmds.tsbeval.help = "Evaluate some unrestricted JavaScript code.";
 cmds.tsbeval.restricted = true;
 
 cmds.tsbeval.func = function(from, to, args) {
-    var ret = eval(args.js);
-    if (ret && ret.toString)
-        client.say(to, from + ": " + ret.toString());
-    else
-        client.say(to, from + ": null/undefined was returned.");
+    try {
+        var ret = eval(args.js);
+        if (ret && ret.toString)
+            client.say(to, from + ": " + ret.toString());
+        else
+            client.say(to, from + ": null/undefined was returned.");
+    }
+    catch (e) {
+        client.say(to, from + "Catched exception: " + e.toString());
+    }
 }
 
 
