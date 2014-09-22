@@ -68,6 +68,20 @@ cmds.about.func = function(from, to, args) {
 }
 
 
+cmds.tsbeval = new Command();
+cmds.tsbeval.args = [new Arg("js", "string", false)];
+cmds.tsbeval.help = "Evaluate some unrestricted JavaScript code.";
+cmds.tsbeval.restricted = true;
+
+cmds.tsbeval.func = function(from, to, args) {
+    var ret = eval(args.js);
+    if (ret && ret.toString)
+        client.say(to, from + ": " + ret.toString());
+    else
+        client.say(to, from + ": null/undefined was returned.");
+}
+
+
 cmds.tipsum = new Command();
 cmds.tipsum.args = [new Arg("nick", "string", false), new Arg("head", "date", true), new Arg("tail", "date", true)];
 cmds.tipsum.help = "Sums up public tips from/to a nick/wildcard between two UTC dates with 14 days maximum difference. "
