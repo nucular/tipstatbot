@@ -111,7 +111,7 @@ client.on("message#", function(from, to, text, message) {
                 var cb = function(nnick, nto, ntext, nmessage) {
                     if (nnick == "NickServ") {
                         client.removeListener("notice", cb);
-                        if (ntext == BOT_OWNER + " ACC 3") {
+                        if (ntext.indexOf(BOT_OWNER + " ACC 3") != -1) {
                             debug("Restricted command allowed");
                             cmd.func(from, to, args);
                         } else {
@@ -121,7 +121,7 @@ client.on("message#", function(from, to, text, message) {
                     }
                 }
                 client.on("notice", cb);
-                client.say("NickServ", "ACC " + process.env.OWNER);
+                client.say("NickServ", "ACC " + BOT_OWNER);
             }
         } else {
             // unrestricted command
