@@ -130,14 +130,16 @@ client.on("message#", function(from, to, text, message) {
     }
 });
 
-client.on("error", function(e) {
+var errh = function(e) {
     if (BOT_OWNER) {
         var s = e.stack.toString().split("\n");
         for (var i = 0; i < s.length; i++) {
             client.say(BOT_OWNER, i);
         }
     }
-});
+}
+process.on("uncaughtException", errh);
+client.on("error", errh);
 
 client.connect(process.env.IRC_RETRYCOUNT || 5);
 
