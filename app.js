@@ -128,7 +128,16 @@ client.on("message#", function(from, to, text, message) {
             cmd.func(from, to, args);
         }
     }
-})
+});
+
+client.on("error", function(e) {
+    if (BOT_OWNER) {
+        var s = e.stack.toString().split("\n");
+        for (var i = 0; i < s.length; i++) {
+            client.say(BOT_OWNER, i);
+        }
+    }
+});
 
 client.connect(process.env.IRC_RETRYCOUNT || 5);
 
