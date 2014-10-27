@@ -7,7 +7,7 @@ var dateformat = require("dateformat");
 var EasyTable = require("easy-table");
 
 var util = require("./util");
-var tipstat = require("./tipstat");
+var Tipstat = require("./tipstat");
 
 
 var Arg = function(name, type, optional) {
@@ -104,7 +104,7 @@ cmds.tipsum.func = function(from, to, args) {
         args.tail = util.dateToUTC(new Date());
     }
 
-    t = tipstat("#dogecoin", args.nick, args.head, args.tail)
+    t = new Tipstat("#dogecoin", args.nick, args.head, args.tail);
     t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
         client.say(to, from
             + ": Incoming (" + util.thd(incoming.tips) + "): Ɖ" + util.thd(incoming.sum)
@@ -116,6 +116,8 @@ cmds.tipsum.func = function(from, to, args) {
     t.on("error", function(err) {
         client.say(to, from + ": " + err);
     });
+
+    t.start();
 }
 
 
@@ -136,7 +138,7 @@ cmds.tipstat.func = function(from, to, args) {
     client.say(to, from + ": Generating tip statistics, this may take a while...");
 
 
-    t = tipstat("#dogecoin", args.nick, args.head, args.tail);
+    t = new Tipstat("#dogecoin", args.nick, args.head, args.tail);
 
     t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
         var output = "Tips to and from: " + args.nick;
@@ -285,6 +287,8 @@ cmds.tipstat.func = function(from, to, args) {
     t.on("error", function(err) {
         client.say(to, from + ": " + err);
     });
+
+    t.start();
 }
 
 
@@ -324,7 +328,7 @@ cmds.tipsper.func = function(from, to, args) {
         return;
     }
 
-    var t = tipstat("#dogecoin", "*", head, tail);
+    var t = new Tipstat("#dogecoin", "*", head, tail);
     t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
         client.say(to, from
             + ": tp" + args.unit.substring(0,1)
@@ -339,6 +343,8 @@ cmds.tipsper.func = function(from, to, args) {
     t.on("error", function(err) {
         client.say(to, from + ": " + err);
     });
+
+    t.start();
 }
 
 module.exports = cmds;

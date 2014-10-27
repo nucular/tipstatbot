@@ -75,4 +75,9 @@ util.wrapLines = function(text, len) {
     return lines.join("\n");
 }
 
+
+util.isValidDate = function(d) {
+    return d.toDateString().toLowerCase().lastIndexOf("invalid") == -1;
+}
+
 module.exports = util;

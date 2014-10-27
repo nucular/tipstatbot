@@ -14,148 +14,164 @@ var mtipcheck = /([\w\<\-\[\]\\\^\{\}]+): Tipped:/
 var mtipparser = /([\w\<\-\[\]\\\^\{\}]+) (\d+)/g
 
 
-function tipstream(channel, nick, head, tail) {
-    var emitter = new events.EventEmitter();
+function Tipstream(channel, nick, head, tail) {
+    this.channel = channel;
+    this.nick = nick;
+    this.head = head;
+    this.tail = tail;
 
-    var url = "http://mniip.com/irc/log/?"
-        + "channel=" + encodeURIComponent(channel)
-        + "&head=" + encodeURIComponent(dateformat(head, "yyyy.mm.dd-HH:MM:ss"))
-        + "&tail=" + encodeURIComponent(dateformat(tail, "yyyy.mm.dd-HH:MM:ss"))
-        + "&grep=" + encodeURIComponent(nick)
-        + "&raw";
-    debug("Fetching logs from", url);
+    var inst = this;
 
-    var request = http.get(url, function(response) {
-            debug("Got response");
-            emitter.emit("response");
+    this.start = function() {
+        var url = "http://mniip.com/irc/log/?"
+            + "channel=" + encodeURIComponent(this.channel)
+            + "&head=" + encodeURIComponent(dateformat(this.head, "yyyy.mm.dd-HH:MM:ss"))
+            + "&tail=" + encodeURIComponent(dateformat(this.tail, "yyyy.mm.dd-HH:MM:ss"))
+            + "&grep=" + encodeURIComponent(this.nick)
+            + "&raw";
+        debug("Fetching logs from", url);
 
-            response.on("error", function(err) {emitter.emit("error", err);});
-            response.on("end", function(err) {emitter.emit("end");});
+        var request = http.get(url, function(response) {
+                debug("Got response");
+                inst.emit("response");
 
-            var l = liner();
-            response.pipe(l);
+                response.on("error", function(err) {inst.emit("error", err);});
+                response.on("end", function(err) {inst.emit("end");});
 
-            // iterate the response line-by-line
-            l.on("readable", function() {
-                var line;
-                while (line = l.read()) {
-                    if (line == "Channel  is not publicly logged") {
-                        emitter.emit("error", "Server error");
-                    } else if (line == "Channel " + channel + " is not publicly logged") {
-                        emitter.emit("error", "Channel is not publicly logged"); // well
-                    } else {
-                        var m = line.match(tipparser);
-                        if (m) {
-                            emitter.emit("tip", m[1], m[3], Number(m[2]));
-                        }
-                        else {
-                            var m = line.match(mtipcheck);
+                var l = liner();
+                response.pipe(l);
+
+                // iterate the response line-by-line
+                l.on("readable", function() {
+                    var line;
+                    while (line = l.read()) {
+                        if (line == "Channel  is not publicly logged") {
+                            inst.emit("error", "Server error");
+                        } else if (line == "Channel " + this.channel + " is not publicly logged") {
+                            inst.emit("error", "Channel is not publicly logged"); // well
+                        } else {
+                            var m = line.match(tipparser);
                             if (m) {
-                                var from = m[1];
-                                var m = line.match(mtipparser);
+                                inst.emit("tip", m[1], m[3], Number(m[2]));
+                            }
+                            else {
+                                var m = line.match(mtipcheck);
                                 if (m) {
-                                    var args = ["mtip", from];
+                                    var from = m[1];
+                                    var m = line.match(mtipparser);
+                                    if (m) {
+                                        var args = ["mtip", from];
 
-                                    for (var i = 0; i < m.length; i++) {
-                                        var s = m[i].split(" ");
-                                        emitter.emit("tip", from, s[0], Number(s[1]));
-                                        args.push([s[0], Number(s[1])]);
+                                        for (var i = 0; i < m.length; i++) {
+                                            var s = m[i].split(" ");
+                                            inst.emit("tip", from, s[0], Number(s[1]));
+                                            args.push([s[0], Number(s[1])]);
+                                        }
+
+                                        inst.emit.apply(this, args);
                                     }
-
-                                    emitter.emit.apply(this, args);
                                 }
                             }
                         }
                     }
-                }
-            });
-            l.on("error", function(err) {emitter.emit("error", err);});
-        }
-    );
-    request.on("error", function(err) {emitter.emit("error", err);});
-
-    return emitter;
-}
-
-function tipstat(channel, target, head, tail) {
-    var emitter = new events.EventEmitter();
-
-    if (isNaN(head) || isNaN(tail)) {
-        emitter.emit("error", "Date formats invalid");
-        return;
-    } else if (tail < head) {
-        emitter.emit("error", "Tail date must be later than head date");
-        return;
-    } else if (util.dateDiff(tail, head) > 14) {
-        emitter.emit("error", "Log server allows 14 days difference maximum");
-        return;
+                });
+                l.on("error", function(err) {inst.emit("error", err);});
+            }
+        );
+        request.on("error", function(err) {inst.emit("error", err);});
     }
-
-    matches = [];
-    incoming = {sum: 0, tips: 0, avg: 0};
-    outgoing = {sum: 0, tips: 0, avg: 0};
-
-    tippers = {};
-    tippees = {};
-
-    var mm = minimatch.Minimatch(target, {
-        noglobstar: true, nocomment: true, nocase: true
-    });
-    mm.makeRe();
-
-    target = target.toLowerCase();
-
-    log = tipstream(channel, "Doger", head, tail);
-
-    log.on("error", function(err) {
-        debug(err.toString());
-        emitter.emit("error", err);
-    });
-
-    log.on("tip", function(from, to, amount) {
-        to = to.toLowerCase();
-        from = from.toLowerCase();
-
-        if (mm.match(to)) {
-            if (matches.indexOf(to) == -1)
-                matches.push(to)
-
-            incoming.tips++;
-            incoming.sum += amount;
-            incoming.avg = (incoming.avg + amount) / 2;
-
-            if (tippers.hasOwnProperty(from)) {
-                tippers[from].tips++;
-                tippers[from].sum += amount;
-                tippers[from].avg = (tippers[from].avg + amount) / 2;
-            } else {
-                tippers[from] = {tips: 1, sum: amount, avg: 0};
-            }
-        }
-        if (mm.match(from)) {
-            if (matches.indexOf(from) == -1)
-                matches.push(from)
-
-            outgoing.tips++;
-            outgoing.sum += amount;
-            outgoing.avg = (outgoing.avg + amount) / 2;
-
-            if (tippees.hasOwnProperty(to)) {
-                tippees[to].tips++;
-                tippees[to].sum += amount;
-                tippees[to].avg = (tippees[to].avg + amount) / 2;
-            } else {
-                tippees[to] = {tips: 1, sum: amount, avg: 0};
-            }
-        }
-    });
-
-    log.on("end", function() {
-        debug("Done");
-        emitter.emit("end", incoming, outgoing, tippers, tippees, matches);
-    });
-
-    return emitter;
 }
+Tipstream.prototype.__proto__ = events.EventEmitter.prototype;
 
-module.exports = tipstat;
+
+function Tipstat(channel, target, head, tail) {
+    this.channel = channel;
+    this.target = target;
+    this.head = head;
+    this.tail = tail;
+
+    var inst = this;
+
+    this.start = function() {
+        if (isNaN(this.head) || isNaN(this.tail)) {
+            inst.emit("error", "Date formats invalid");
+            return this;
+        } else if (this.tail < this.head) {
+            inst.emit("error", "Tail date must be later than head date");
+            return this;
+        } else if (util.dateDiff(this.tail, this.head) > 14) {
+            inst.emit("error", "Log server allows 14 days difference maximum");
+            return this;
+        }
+
+        matches = [];
+        incoming = {sum: 0, tips: 0, avg: 0};
+        outgoing = {sum: 0, tips: 0, avg: 0};
+
+        tippers = {};
+        tippees = {};
+
+        var mm = minimatch.Minimatch(this.target, {
+            noglobstar: true, nocomment: true, nocase: true
+        });
+        mm.makeRe();
+
+        target = this.target.toLowerCase();
+
+        log = new Tipstream(this.channel, "Doger", this.head, this.tail);
+
+        log.on("error", function(err) {
+            debug(err.toString());
+            inst.emit("error", err);
+        });
+
+        log.on("tip", function(from, to, amount) {
+            to = to.toLowerCase();
+            from = from.toLowerCase();
+
+            if (mm.match(to)) {
+                if (matches.indexOf(to) == -1)
+                    matches.push(to)
+
+                incoming.tips++;
+                incoming.sum += amount;
+                incoming.avg = (incoming.avg + amount) / 2;
+
+                if (tippers.hasOwnProperty(from)) {
+                    tippers[from].tips++;
+                    tippers[from].sum += amount;
+                    tippers[from].avg = (tippers[from].avg + amount) / 2;
+                } else {
+                    tippers[from] = {tips: 1, sum: amount, avg: 0};
+                }
+            }
+            if (mm.match(from)) {
+                if (matches.indexOf(from) == -1)
+                    matches.push(from)
+
+                outgoing.tips++;
+                outgoing.sum += amount;
+                outgoing.avg = (outgoing.avg + amount) / 2;
+
+                if (tippees.hasOwnProperty(to)) {
+                    tippees[to].tips++;
+                    tippees[to].sum += amount;
+                    tippees[to].avg = (tippees[to].avg + amount) / 2;
+                } else {
+                    tippees[to] = {tips: 1, sum: amount, avg: 0};
+                }
+            }
+        });
+
+        log.on("end", function() {
+            debug("Done");
+            inst.emit("end", incoming, outgoing, tippers, tippees, matches);
+        });
+
+        log.start();
+    }
+}
+Tipstat.prototype.__proto__ = events.EventEmitter.prototype;
+
+
+module.exports = Tipstat;

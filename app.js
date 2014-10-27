@@ -89,8 +89,8 @@ client.on("message#", function(from, to, text, message) {
                 }
             } else if (cmd.args[i].type == "date") {
                 arg = new Date(arg);
-                if (isNaN(arg)) {
-                    client.say(to, from + ": " + cmd.args[i].name.toUpperCase() + " has to be a valid date! Try "
+                if (!util.isValidDate(arg)) {
+                    client.say(to, from + ": " + cmd.args[i].name.toUpperCase() + " has to be a valid date (with a time value)! Try "
                         + BOT_PREFIX + "help " + name);
                     return;
                 }
@@ -129,17 +129,16 @@ client.on("message#", function(from, to, text, message) {
         }
     }
 });
-
-var errh = function(e) {
+ 
+client.on("error", function(e) {
+    console.error("Caught Exception:\n" + e.stack);
     if (BOT_OWNER) {
-        var s = e.stack.toString().split("\n");
-        for (var i = 0; i < s.length; i++) {
-            client.say(BOT_OWNER, i);
-        }
+        var s = e.stack.split("\n");
+        s.forEach(function(i, v) {
+            client.say(BOT_OWNER, v);
+        });
     }
-}
-process.on("uncaughtException", errh);
-client.on("error", errh);
+});
 
 client.connect(process.env.IRC_RETRYCOUNT || 5);
 
