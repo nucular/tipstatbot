@@ -8,6 +8,7 @@ var cmdparser = /([^" ]+)|"([^"]*)"/g;
 global.BOT_PREFIX = process.env.BOT_PREFIX || "!";
 global.BOT_DEBUG = util.parseBool(process.env.BOT_DEBUG, false);
 global.BOT_OWNER = process.env.BOT_OWNER || "";
+global.BOT_COLORS = util.parseBool(process.env.BOT_COLORS, true);
 
 global.IRC_NICK = process.env.IRC_NICK || "tipstatbot";
 global.IRC_SERVER = process.env.IRC_SERVER || "irc.freenode.net";

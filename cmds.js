@@ -40,15 +40,15 @@ cmds.help.func = function(from, to, args) {
 
             arghelp = "";
             for (var i = 0; i < cmd.args.length; i++) {
-                arghelp += (cmd.args[i].optional ? "[" : "")
+                arghelp += (cmd.args[i].optional ? "[" : "{{bold}}")
                     + cmd.args[i].name.toUpperCase()
-                    + "(" + cmd.args[i].type + ")"
-                    + (cmd.args[i].optional ? "] " : " ");
+                    + "({{italic}}" + cmd.args[i].type + "{{italic}})"
+                    + (cmd.args[i].optional ? "] " : "{{bold}} ");
             }
 
-            client.say(to, from + ": "
+            client.say(to, util.colorfy(from + ":{{clear}} "
                 + BOT_PREFIX + args.name + " "
-                + arghelp + " (" + cmd.help + ")");
+                + arghelp + " (" + cmd.help + ")"));
         } else {
             //client.say(to, from + ": I don't know that command, sorry!");
         }
@@ -62,9 +62,9 @@ cmds.about = new Command();
 cmds.about.help = "Shows some infos about me.";
 
 cmds.about.func = function(from, to, args) {
-    client.say(to, from + ": I'm a bot written by nucular in Node.js. "
-        + "I can provide interesting tip statistics, powered by mniip's log server. "
-        + "My source can be found at https://github.com/nucular/tipstatbot.");
+    client.say(to, util.colorfy(from + ":{{clear}} I'm a bot written by {{blue}}nucular{{clear}} in Node.js. "
+        + "I can provide interesting tip statistics, powered by {{blue}}mniip{{clear}}'s log server. "
+        + "My source can be found at {{bold}}https://github.com/nucular/tipstatbot{{bold}}."));
 }
 
 
@@ -106,10 +106,61 @@ cmds.tipsum.func = function(from, to, args) {
 
     t = new Tipstat("#dogecoin", args.nick, args.head, args.tail);
     t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
-        client.say(to, from
-            + ": Incoming (" + util.thd(incoming.tips) + "): Ɖ" + util.thd(incoming.sum)
-            + ", outgoing (" + util.thd(outgoing.tips) + "): Ɖ" + util.thd(outgoing.sum)
-            + ", net: Ɖ" + util.thd(incoming.sum - outgoing.sum));
+        var toptippers = ["","",""];
+        var toptippees = ["","",""];
+
+        for (var k in tippers) {
+            if (tippers.hasOwnProperty(k)) {
+                toptippers.every(function(v, i) {
+                    if (v == "" || tippers[v].sum < tippers[k].sum) {
+                        toptippers[i] = k;
+                        return false;
+                    } else {
+                        return true;
+                    }
+                });
+            }
+        }
+
+        for (var k in tippees) {
+            if (tippees.hasOwnProperty(k)) {
+                toptippees.every(function(v, i) {
+                    if (v == "" || tippees[v].sum < tippees[k].sum) {
+                        toptippees[i] = k;
+                        return false;
+                    } else {
+                        return true;
+                    }
+                });
+            }
+        }
+
+        var toptipperstr = "";
+        toptippers.forEach(function(v, i) {
+            if (v != "") {
+                toptipperstr += "{{bold}}{{green}}" + v + "{{clear}}"
+                    + " {{red}}Ɖ" + util.thd(tippers[v].sum) + "{{clear}}"
+                    + ", {{blue}}" + util.thd(tippers[v].tips) + "{{clear}} tips | ";
+            }
+        });
+        toptipperstr = toptipperstr.substring(0, toptipperstr.length - 3);
+
+        var toptippeestr = "";
+        toptippees.forEach(function(v, i) {
+            if (v != "") {
+                toptippeestr += "{{bold}}{{green}}" + v + "{{clear}}"
+                    + " {{red}}Ɖ" + util.thd(tippees[v].sum) + "{{clear}}"
+                    + ", {{blue}}" + util.thd(tippees[v].tips) + "{{clear}} tips | ";
+            }
+        });
+        toptippeestr = toptippeestr.substring(0, toptippeestr.length - 3);
+
+        client.say(to, util.colorfy(from
+            + ":{{clear}} Incoming ({{blue}}" + util.thd(incoming.tips) + "{{clear}}): {{red}}Ɖ" + util.thd(incoming.sum)
+            + "{{clear}}, outgoing ({{blue}}" + util.thd(outgoing.tips) + "{{clear}}): {{red}}Ɖ" + util.thd(outgoing.sum)
+            + "{{clear}}, net: {{red}}Ɖ" + util.thd(incoming.sum - outgoing.sum) + "{{clear}} | "
+            + " ({{italic}}Most Tipping{{italic}}: " + toptipperstr + ")"
+            + " ({{italic}}Most Tipped{{italic}}: " + toptippeestr + ")"));
         costs += Math.ceil((1 + util.dateDiff(args.tail, args.head)) * 7);
     });
 
@@ -195,7 +246,7 @@ cmds.tipstat.func = function(from, to, args) {
         t.newRow();
 
         var s = "\nTippers (incoming): " + util.thd(tkeys.length);
-        output += "\n\n" + s + "\n" + util.repeatString("-", s.length)
+        output += "\n\n" + s + "\n" + util.repeatString("-", s.length - 1)
             + "\n" + t.toString();
 
 
@@ -268,7 +319,7 @@ cmds.tipstat.func = function(from, to, args) {
                     client.say(to, from + ": Unexpected response from hastebin!");
                 } else {
                     var url = "http://hastebin.com/" + id[1] + ".txt";
-                    client.say(to, from + ": Tip statistics uploaded, see " + url);
+                    client.say(to, util.colorfy(from + ": Tip statistics uploaded, see {{bold}}" + url + "{{bold}}"));
                 }
             });
         });
@@ -330,13 +381,13 @@ cmds.tipsper.func = function(from, to, args) {
 
     var t = new Tipstat("#dogecoin", "*", head, tail);
     t.on("end", function(incoming, outgoing, tippers, tippees, matches) {
-        client.say(to, from
-            + ": tp" + args.unit.substring(0,1)
-            + ": " + util.thd(+(incoming.tips / args.range).toFixed(4))
-            + ", Ɖp" + args.unit.substring(0,1)
-            + ": " + util.thd(+(incoming.sum / args.range).toFixed(4))
-            + " (measured in the last " + util.thd(args.range) + " " + args.unit
-            + "s)");
+        client.say(to, util.colorfy(from
+            + ":{{clear}} tp" + args.unit.substring(0,1)
+            + ": {{red}}" + util.thd(+(incoming.tips / args.range).toFixed(4))
+            + "{{clear}}, Ɖp" + args.unit.substring(0,1)
+            + ": {{red}}" + util.thd(+(incoming.sum / args.range).toFixed(4))
+            + "{{clear}} (measured in the last " + util.thd(args.range) + " " + args.unit
+            + "s)"));
         costs += Math.ceil((1 + util.dateDiff(tail, head)) * 7);
     });
 

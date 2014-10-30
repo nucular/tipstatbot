@@ -80,4 +80,66 @@ util.isValidDate = function(d) {
     return d.toDateString().toLowerCase().lastIndexOf("invalid") == -1;
 }
 
+var COLORTABLE = {
+    "white": "00",
+    "black": "01",
+    "blue": "02",
+    "navy": "02",
+    "green": "03",
+    "red": "04",
+    "brown": "05",
+    "maroon": "05",
+    "purple": "06",
+    "orange": "07",
+    "yellow": "08",
+    "lgreen": "09",
+    "lime": "09",
+    "teal": "10",
+    "cyan": "10",
+    "lcyan": "11",
+    "aqua": "11",
+    "lblue": "12",
+    "royal": "12",
+    "pink": "13",
+    "lpurple": "13",
+    "fuchsia": "13",
+    "grey": "14",
+    "lgrey": "15",
+    "silver": "15"
+}
+var COLORCTRL = String.fromCharCode(0x03);
+var BOLDCTRL = String.fromCharCode(0x02);
+var ITALICCTRL = String.fromCharCode(0x1D);
+var UNDERLINECTRL = String.fromCharCode(0x1F);
+var CLEARCTRL = String.fromCharCode(0x0F);
+
+util.colorfy = function(str) {
+    return str.replace(/\{\{(\/?[\w,]+)\}\}/g, function(a, b) {
+        var ret = "";
+
+        if (BOT_COLORS) {
+            var s = b.split(",");
+            if (s.length == 2) {
+                ret = COLORCTRL;
+                if (COLORTABLE.hasOwnProperty(s[0]))
+                    ret += COLORTABLE[s[0]];
+                if (COLORTABLE.hasOwnProperty(s[1]))
+                    ret += "," + COLORTABLE[s[1]];
+            } else if (COLORTABLE.hasOwnProperty(b)) {
+                ret = COLORCTRL + COLORTABLE[b];
+            } else if (b == "bold") {
+                ret = BOLDCTRL;
+            } else if (b == "italic") {
+                ret = ITALICCTRL;
+            } else if (b == "underline") {
+                ret = UNDERLINECTRL;
+            } else if (b == "clear" || b == "reset") {
+                ret = CLEARCTRL;
+            }
+        }
+
+        return ret;
+    });
+}
+
 module.exports = util;
