@@ -53,7 +53,7 @@ cmds.help.func = function(from, to, args) {
             //client.say(to, from + ": I don't know that command, sorry!");
         }
     } else {
-        client.notice(to, from + ": My commands are " + util.getProps(cmds).join(", "));
+        client.say(to, from + ": My commands are " + util.getProps(cmds).join(", "));
     }
 }
 
@@ -62,7 +62,7 @@ cmds.about = new Command();
 cmds.about.help = "Shows some infos about me.";
 
 cmds.about.func = function(from, to, args) {
-    client.notice(to, util.colorfy(from + ":{{clear}} I'm a bot written by {{blue}}nucular{{clear}} in Node.js. "
+    client.say(to, util.colorfy(from + ":{{clear}} I'm a bot written by {{blue}}nucular{{clear}} in Node.js. "
         + "I can provide interesting tip statistics, powered by {{blue}}mniip{{clear}}'s log server. "
         + "My source can be found at {{bold}}https://github.com/nucular/tipstatbot{{bold}}."));
 }
@@ -165,7 +165,7 @@ cmds.tipsum.func = function(from, to, args) {
     });
 
     t.on("error", function(err) {
-        client.notice(to, from + ": " + err);
+        client.notice(from, from + ": " + err);
     });
 
     t.start();
@@ -186,7 +186,7 @@ cmds.tipstat.func = function(from, to, args) {
         args.tail = util.dateToUTC(new Date());
     }
 
-    client.notice(to, from + ": Generating tip statistics, this may take a while...");
+    client.notice(from, from + ": Generating tip statistics, this may take a while...");
 
 
     t = new Tipstat("#dogecoin", args.nick, args.head, args.tail);
@@ -316,7 +316,7 @@ cmds.tipstat.func = function(from, to, args) {
                 var id = str.match(/{"key":"(\w+)"}/);
                 if (!id) {
                     debug("Unexpected response", str);
-                    client.notice(to, from + ": Unexpected response from hastebin!");
+                    client.notice(from, from + ": Unexpected response from hastebin!");
                 } else {
                     var url = "http://hastebin.com/" + id[1] + ".txt";
                     client.say(to, util.colorfy(from + ": Tip statistics uploaded, see {{bold}}" + url + "{{bold}}"));
@@ -326,7 +326,7 @@ cmds.tipstat.func = function(from, to, args) {
 
         req.on("error", function(err) {
             debug("Hastebin error", err.toString());
-            client.notice(to, from + ": " + err);
+            client.notice(from, from + ": " + err);
         });
 
         debug("Posting to hastebin");
@@ -336,7 +336,7 @@ cmds.tipstat.func = function(from, to, args) {
     });
 
     t.on("error", function(err) {
-        client.notice(to, from + ": " + err);
+        client.notice(from, from + ": " + err);
     });
 
     t.start();
@@ -361,11 +361,11 @@ cmds.tipsper.func = function(from, to, args) {
         args.range = 1;
     }
     if (!units.hasOwnProperty(args.unit)) {
-        client.notice(to, from + ": I don't even know that unit.");
+        client.notice(from, from + ": I don't even know that unit.");
         return;
     }
     if (args.range <= 0) {
-        client.notice(to, from + ": I can't measure in that range...");
+        client.notice(from, from + ": I can't measure in that range...");
         return;
     }
     args.range = +(args.range).toFixed(4);
@@ -375,7 +375,7 @@ cmds.tipsper.func = function(from, to, args) {
     head.setTime(tail.getTime()-(args.range*units[args.unit]));
 
     if (isNaN(head) || isNaN(tail)) {
-        client.notice(to, from + ": I really can't measure in that range...");
+        client.notice(from, from + ": I really can't measure in that range...");
         return;
     }
 
@@ -392,7 +392,7 @@ cmds.tipsper.func = function(from, to, args) {
     });
 
     t.on("error", function(err) {
-        client.notice(to, from + ": " + err);
+        client.notice(from, from + ": " + err);
     });
 
     t.start();
