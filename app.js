@@ -63,7 +63,7 @@ client.on("message#", function(from, to, text, message) {
 
         // command is cost-blocked
         if (cmd.costblock && costs > 0) {
-            client.say(to, from + ": Please wait " + String(costs) + " seconds.");
+            client.notice(to, from + ": Please wait " + String(costs) + " seconds.");
             return;
         }
 
@@ -74,7 +74,7 @@ client.on("message#", function(from, to, text, message) {
                 if (cmd.args[i].optional) {
                     break;
                 } else {
-                    client.say(to, from + ": " + "Not enough arguments! Try "
+                    client.notice(to, from + ": " + "Not enough arguments! Try "
                         + BOT_PREFIX + "help " + name);
                     return;
                 }
@@ -84,14 +84,14 @@ client.on("message#", function(from, to, text, message) {
             if (cmd.args[i].type == "number") {
                 arg = Number(arg);
                 if (isNaN(arg)) {
-                    client.say(to, from + ": " + cmd.args[i].name.toUpperCase() + " has to be a number! Try "
+                    client.notice(to, from + ": " + cmd.args[i].name.toUpperCase() + " has to be a number! Try "
                         + BOT_PREFIX + "help " + name);
                     return;
                 }
             } else if (cmd.args[i].type == "date") {
                 arg = new Date(arg);
                 if (!util.isValidDate(arg)) {
-                    client.say(to, from + ": " + cmd.args[i].name.toUpperCase() + " has to be a valid date (with a time value)! Try "
+                    client.notice(to, from + ": " + cmd.args[i].name.toUpperCase() + " has to be a valid date (with a time value)! Try "
                         + BOT_PREFIX + "help " + name);
                     return;
                 }
@@ -107,7 +107,7 @@ client.on("message#", function(from, to, text, message) {
             // restricted command
             if (from != BOT_OWNER) {
                 debug("Restricted command denied");
-                client.say(to, from + ": Sorry, that command is reserved for " + BOT_OWNER + ".");
+                client.notice(to, from + ": Sorry, that command is reserved for " + BOT_OWNER + ".");
             } else {
                 var cb = function(nnick, nto, ntext, nmessage) {
                     if (nnick == "NickServ") {
@@ -117,7 +117,7 @@ client.on("message#", function(from, to, text, message) {
                             cmd.func(from, to, args);
                         } else {
                             debug("Impersonation!");
-                            client.say(to, from + ": Stop impersonating my owner!");
+                            client.notice(to, from + ": Stop impersonating my owner!");
                         }
                     }
                 }
