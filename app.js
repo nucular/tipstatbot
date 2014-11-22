@@ -50,6 +50,10 @@ client.on("registered", function(message) {
 client.on("message#", function(from, to, text, message) {
     var m = text.match(cmdparser);
 
+    if (!m) {
+        return;
+    }
+
     if (m[0].substring(0, 1) != BOT_PREFIX) {
         return;
     }
